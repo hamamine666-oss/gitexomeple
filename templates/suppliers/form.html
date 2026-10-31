@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %} {% if supplier %} تعديل المورد {% else %} إضافة مورد {% endif %} {% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+<div>
+
+<h1> {% if supplier %} ✏️ تعديل المورد {% else %} ➕ إضافة مورد {% endif %} </h1>
+
+<p style="color:#64748b; margin-top:8px;">
+
+{% if supplier %} تعديل بيانات المورد {% else %} إضافة مورد جديد إلى النظام {% endif %}
+
+</p>
+
+</div>
+<a
+    href="{% url 'suppliers:list' %}"
+    class="btn"
+>
+    العودة إلى الموردين
+</a>
+
+
+</div>
+
+<div class="card">
+
+<form method="post">
+
+{% csrf_token %}
+
+<div style=" display:grid; grid-template-columns:1fr 1fr; gap:20px; ">
+
+<!-- اسم المورد -->
+
+<div>
+
+<label>اسم المورد</label>
+
+<input type="text" name="name" value="{{ supplier.name|default:'' }}" required style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+<!-- اسم الشركة -->
+
+<div>
+
+<label>اسم الشركة</label>
+
+<input type="text" name="companyname" value="{{ supplier.companyname|default:'' }}" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+<!-- الهاتف -->
+
+<div>
+
+<label>الهاتف</label>
+
+<input type="text" name="phone" value="{{ supplier.phone|default:'' }}" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+<!-- البريد الإلكتروني -->
+
+<div>
+
+<label>البريد الإلكتروني</label>
+
+<input type="email" name="email" value="{{ supplier.email|default:'' }}" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+<!-- الرقم الضريبي -->
+
+<div>
+
+<label>الرقم الضريبي</label>
+
+<input type="text" name="taxnumber" value="{{ supplier.taxnumber|default:'' }}" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+<!-- الرصيد -->
+
+<div>
+
+<label>الرصيد</label>
+
+<input type="number" step="0.01" name="balance" value="{{ supplier.balance|default:'0' }}" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; " >
+
+</div>
+
+</div>
+
+<!-- العنوان -->
+
+<div style="margin-top:20px;">
+
+<label>العنوان</label>
+
+<textarea name="address" rows="4" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; resize:vertical; " >{{ supplier.address|default:'' }}</textarea>
+
+</div>
+
+<!-- الملاحظات -->
+
+<div style="margin-top:20px;">
+
+<label>ملاحظات</label>
+
+<textarea name="notes" rows="4" style=" width:100%; padding:12px; margin-top:7px; border:1px solid #ddd; border-radius:7px; resize:vertical; " >{{ supplier.notes|default:'' }}</textarea>
+
+</div>
+
+<!-- الحالة -->
+
+<div style="margin-top:20px;">
+
+<label style=" display:flex; align-items:center; gap:8px; cursor:pointer; ">
+
+<input type="checkbox" name="isactive" {% if supplier.isactive or not supplier %} checked {% endif %} >
+
+<span> المورد نشط </span>
+
+</label>
+
+</div>
+
+<!-- الأزرار -->
+
+<div style=" margin-top:25px; display:flex; gap:10px; align-items:center; ">
+
+<button type="submit" class="btn" > 💾 حفظ المورد </button>
+
+<a href="{% url 'suppliers:list' %}" class="btn" style="background:#64748b;" > إلغاء </a>
+
+</div>
+
+</form>
+
+</div>
+
+{% endblock %}

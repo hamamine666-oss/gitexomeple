@@ -1,0 +1,257 @@
+```html
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4" dir="rtl">
+
+    <!-- العنوان -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">إدارة العملاء</h2>
+            <p class="text-muted mb-0">عرض وإدارة بيانات العملاء</p>
+        </div>
+
+       <button
+    type="button"
+    class="btn btn-primary"
+    data-bs-toggle="modal"
+    data-bs-target="#addCustomerModal"
+>
+    <i class="bi bi-plus-circle"></i>
+    إضافة عميل جديد
+</button>
+    </div>
+
+    <!-- البحث -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2">
+                <div class="col-md-10">
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="ابحث بالاسم أو الهاتف أو البريد الإلكتروني..."
+                        value="{{ search }}"
+                    >
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-search"></i>
+                        بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- جدول العملاء -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold">قائمة العملاء</h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>اسم العميل</th>
+                            <th>الهاتف</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الرصيد</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+
+                            <td class="fw-semibold text-end">
+                                {{ customer.name }}
+                            </td>
+
+                            <td>
+                                {{ customer.phone|default:"—" }}
+                            </td>
+
+                            <td>
+                                {{ customer.email|default:"—" }}
+                            </td>
+
+                            <td class="fw-bold">
+                                {{ customer.balance|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                {% if customer.is_active %}
+                                    <span class="badge bg-success">
+                                        نشط
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        غير نشط
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+
+                                    <a
+                                        href="{% url 'customers:edit' customer.pk %}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        title="تعديل"
+                                    >
+                                        تعديل
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'customers:delete' customer.pk %}"
+                                        onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟');"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                        >
+                                            حذف
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="py-5 text-muted">
+                                <p class="mb-2">لا يوجد عملاء لعرضهم.</p>
+
+                                {% if search %}
+                                    <a href="{% url 'customers:list' %}" class="btn btn-sm btn-outline-secondary">
+                                        عرض جميع العملاء
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'customers:create' %}" class="btn btn-sm btn-primary">
+                                        إضافة أول عميل
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white text-muted">
+            عدد العملاء المعروضين: {{ customers|length }}
+        </div>
+    </div>
+
+</div>
+
+
+<!-- نافذة إضافة عميل -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1"
+     aria-labelledby="addCustomerModalLabel" aria-hidden="true"
+     dir="rtl">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addCustomerModalLabel">
+                    إضافة عميل جديد
+                </h5>
+
+                <button type="button"
+                        class="btn-close ms-0"
+                        data-bs-dismiss="modal"
+                        aria-label="إغلاق"></button>
+            </div>
+
+            <form method="post" action="{% url 'customers:create' %}">
+                {% csrf_token %}
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">اسم العميل *</label>
+                            <input type="text" name="name"
+                                   class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">الهاتف</label>
+                            <input type="text" name="phone"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">البريد الإلكتروني</label>
+                            <input type="email" name="email"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">الرصيد</label>
+                            <input type="number" name="balance"
+                                   class="form-control"
+                                   step="0.01" value="0">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">العنوان</label>
+                            <textarea name="address"
+                                      class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea name="notes"
+                                      class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="is_active"
+                                       class="form-check-input"
+                                       id="customerIsActive" checked>
+                                <label class="form-check-label"
+                                       for="customerIsActive">
+                                    العميل نشط
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                        إلغاء
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        حفظ العميل
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+```

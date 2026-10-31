@@ -1,0 +1,497 @@
+
+{% extends "base.html" %}
+
+{% block title %}إدارة المخزون | نظام ERP{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid py-3" dir="rtl">
+
+    <!-- عنوان الصفحة -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-2">
+                <i class="bi bi-box-seam text-primary"></i>
+                إدارة المخزون
+            </h2>
+            <p class="text-muted mb-0">
+                متابعة المنتجات والكميات المتوفرة والحد الأدنى للمخزون
+            </p>
+        </div>
+
+        
+<button type="button"
+        class="btn btn-primary px-4 py-2"
+        data-bs-toggle="modal"
+        data-bs-target="#inventoryModal">
+    <i class="bi bi-plus-circle"></i>
+    إضافة مخزون
+</button>
+    </div>
+
+    <!-- رسائل النظام -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show"
+                 role="alert">
+                {{ message }}
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="إغلاق"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- بطاقات الإحصائيات -->
+    <div class="row g-3 mb-4">
+
+        <!-- إجمالي سجلات المخزون -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-2">عدد سجلات المخزون</p>
+                        <h3 class="fw-bold mb-0">
+                            {{ inventories|length }}
+                        </h3>
+                    </div>
+
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                        <i class="bi bi-box-seam fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- المخزون المنخفض -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-2">مخزون منخفض أو نافد</p>
+                        <h3 class="fw-bold text-danger mb-0">
+                            {{ low_stock_count }}
+                        </h3>
+                    </div>
+
+                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-3">
+                        <i class="bi bi-exclamation-triangle fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نتائج العرض -->
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-2">السجلات المعروضة</p>
+                        <h3 class="fw-bold text-success mb-0">
+                            {{ inventories|length }}
+                        </h3>
+                    </div>
+
+                    <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+                        <i class="bi bi-clipboard-check fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- جدول المخزون -->
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-list-ul text-primary"></i>
+                    قائمة المخزون
+                </h5>
+
+                <span class="badge bg-light text-dark border">
+                    {{ inventories|length }} سجل
+                </span>
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <!-- البحث -->
+            <form method="get" class="row g-2 mb-4">
+
+                <div class="col-12 col-md-6 col-lg-5">
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="ابحث باسم المنتج أو رمز المنتج..."
+                        value="{{ search|default:'' }}"
+                    >
+                </div>
+
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-search"></i>
+                        بحث
+                    </button>
+
+                    <a href="{% url 'inventory:list' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        إعادة تعيين
+                    </a>
+                </div>
+
+            </form>
+
+            <!-- الجدول -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>المنتج</th>
+                            <th>رمز المنتج</th>
+                            <th>الكمية المتوفرة</th>
+                            <th>الحد الأدنى</th>
+                            <th>موقع التخزين</th>
+                            <th>حالة المخزون</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for item in inventories %}
+                        <tr>
+
+                            <!-- الرقم -->
+                            <td>{{ forloop.counter }}</td>
+
+                            <!-- اسم المنتج -->
+                            <td class="fw-bold">
+                                {{ item.product.name|default:"غير محدد" }}
+                            </td>
+
+                            <!-- رمز المنتج -->
+                            <td>
+                                {{ item.product.code|default:"—" }}
+                            </td>
+
+                            <!-- الكمية -->
+                            <td class="fw-bold
+                                {% if item.quantity <= 0 %}
+                                    text-danger
+                                {% elif item.quantity <= item.minimum_stock %}
+                                    text-warning
+                                {% else %}
+                                    text-success
+                                {% endif %}">
+                                {{ item.quantity }}
+                            </td>
+
+                            <!-- الحد الأدنى -->
+                            <td>
+                                {{ item.minimum_stock }}
+                            </td>
+
+                            <!-- الموقع -->
+                            <td>
+                                {% if item.location %}
+                                    <i class="bi bi-geo-alt text-muted"></i>
+                                    {{ item.location }}
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- حالة المخزون -->
+                            <td>
+                                {% if item.quantity <= 0 %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i>
+                                        نفد المخزون
+                                    </span>
+
+                                {% elif item.quantity <= item.minimum_stock %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        مخزون منخفض
+                                    </span>
+
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i>
+                                        متوفر
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- الإجراءات -->
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+
+                                    <a href="{% url 'inventory:edit' item.pk %}"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="تعديل المخزون"
+                                       aria-label="تعديل المخزون">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url 'inventory:delete' item.pk %}"
+                                          onsubmit="return confirm('هل أنت متأكد من حذف سجل المخزون هذا؟');">
+
+                                        {% csrf_token %}
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="حذف المخزون"
+                                                aria-label="حذف المخزون">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="py-5">
+
+                                <i class="bi bi-inbox text-muted"
+                                   style="font-size: 48px;"></i>
+
+                                <h6 class="fw-bold mt-3">
+                                    لا توجد سجلات مخزون
+                                </h6>
+
+                                <p class="text-muted mb-3">
+                                    {% if search %}
+                                        لم يتم العثور على منتجات تطابق البحث.
+                                    {% else %}
+                                        لم تتم إضافة أي سجلات للمخزون حتى الآن.
+                                    {% endif %}
+                                </p>
+
+                                {% if search %}
+                                    <a href="{% url 'inventory:list' %}"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        عرض جميع السجلات
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'inventory:create' %}"
+                                       class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-circle"></i>
+                                        إضافة مخزون جديد
+                                    </a>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            <!-- أسفل الجدول -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-3 border-top">
+                <small class="text-muted">
+                    عدد السجلات المعروضة: {{ inventories|length }}
+                </small>
+
+                <small class="text-muted">
+                    <i class="bi bi-shield-check"></i>
+                    نظام إدارة المخزون ERP
+                </small>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- نافذة إضافة المخزون -->
+<div class="modal fade"
+     id="inventoryModal"
+     tabindex="-1"
+     aria-labelledby="inventoryModalLabel"
+     aria-hidden="true"
+     dir="rtl">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="inventoryModalLabel">
+                    <i class="bi bi-box-seam"></i>
+                    إضافة مخزون جديد
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"
+                        aria-label="إغلاق"></button>
+            </div>
+
+            <div class="modal-body" id="inventoryModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary"
+                         role="status"></div>
+                    <p class="mt-2">جاري تحميل النموذج...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modalElement = document.getElementById("inventoryModal");
+    const modalBody = document.getElementById("inventoryModalBody");
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    const createUrl = "{% url 'inventory:create' %}";
+    const listUrl = "{% url 'inventory:list' %}";
+
+    // تحميل نموذج الإضافة عند فتح النافذة
+    modalElement.addEventListener("show.bs.modal", function () {
+        modalBody.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-2">جاري تحميل النموذج...</p>
+            </div>
+        `;
+
+        fetch(createUrl, {
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("تعذر تحميل نموذج المخزون.");
+            }
+            return response.text();
+        })
+        .then(html => {
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            modalBody.innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    ${error.message}
+                </div>
+            `;
+        });
+    });
+
+    // إرسال النموذج دون مغادرة الصفحة
+    modalBody.addEventListener("submit", function (event) {
+        const form = event.target.closest("form");
+
+        if (!form) return;
+
+        event.preventDefault();
+
+        const submitButton = form.querySelector(
+            'button[type="submit"], input[type="submit"]'
+        );
+
+        const originalText = submitButton
+            ? submitButton.innerHTML
+            : "";
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = "جاري الحفظ...";
+        }
+
+        fetch(form.action || createUrl, {
+            method: "POST",
+            body: new FormData(form),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        })
+        .then(async response => {
+            const contentType =
+                response.headers.get("content-type") || "";
+
+            if (contentType.includes("application/json")) {
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(
+                        data.message || "تعذر حفظ المخزون."
+                    );
+                }
+
+                return { success: true };
+            }
+
+            const html = await response.text();
+
+            // عند إعادة التوجيه بعد الحفظ الناجح
+            if (response.redirected) {
+                return { success: true };
+            }
+
+            // عرض النموذج مجددًا عند وجود أخطاء تحقق
+            modalBody.innerHTML = html;
+
+            if (!response.ok) {
+                throw new Error("تعذر حفظ البيانات.");
+            }
+
+            return { success: false };
+        })
+        .then(result => {
+            if (result.success) {
+                modal.hide();
+                window.location.href = listUrl;
+            }
+        })
+        .catch(error => {
+            let alert = modalBody.querySelector(".save-error");
+
+            if (!alert) {
+                alert = document.createElement("div");
+                alert.className = "alert alert-danger save-error";
+                modalBody.prepend(alert);
+            }
+
+            alert.textContent = error.message;
+
+            const button = modalBody.querySelector(
+                'button[type="submit"], input[type="submit"]'
+            );
+
+            if (button) {
+                button.disabled = false;
+                button.innerHTML =
+                    button.dataset.originalText || "حفظ";
+            }
+        });
+
+        if (submitButton) {
+            submitButton.dataset.originalText = originalText;
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

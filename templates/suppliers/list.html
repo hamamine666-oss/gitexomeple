@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}الموردون{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+<div>
+
+<h1>🚚 الموردون</h1>
+
+<p style="color:#64748b; margin-top:8px;"> إدارة الموردين وبيانات الاتصال والأرصدة </p>
+
+</div>
+
+<a href="{% url 'suppliers:create' %}" class="btn">
+    إضافة مورد
+</a>
+
+</div>
+
+<div class="card" style="margin-bottom:20px;"
+
+<form method="get">
+
+<div style=" display:flex; gap:10px; align-items:center; ">
+
+<input type="text" name="search" value="{{ search }}" placeholder="ابحث باسم المورد أو الشركة أو الهاتف..." style=" flex:1; padding:12px; border:1px solid #ddd; border-radius:7px; font-family:Tahoma, Arial, sans-serif; " >
+
+<button type="submit" class="btn" > بحث </button>
+
+</div>
+
+</form>
+
+</div>
+
+<div class="card">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>المورد</th> <th>الشركة</th> <th>الهاتف</th> <th>البريد الإلكتروني</th> <th>الرقم الضريبي</th> <th>الرصيد</th> <th>الحالة</th> <th>الإجراءات</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for supplier in suppliers %}
+
+<tr>
+
+<td> <strong> {{ supplier.name }} </strong> </td>
+
+<td> {{ supplier.company_name|default:"-" }} </td>
+
+<td> {{ supplier.phone|default:"-" }} </td>
+
+<td> {{ supplier.email|default:"-" }} </td>
+
+<td> {{ supplier.tax_number|default:"-" }} </td>
+
+<td> {{ supplier.balance }} دج </td>
+
+<td>
+
+{% if supplier.is_active %}
+
+<span class="badge success"> نشط </span>
+
+{% else %}
+
+<span class="badge danger"> غير نشط </span>
+
+{% endif %}
+
+</td>
+
+<td>
+
+<a href="{% url 'suppliers:edit' supplier.pk %}" style=" color:#2563eb; text-decoration:none; " > تعديل </a>
+
+<span> | </span>
+
+<form method="post" action="{% url 'suppliers:delete' supplier.pk %}" style="display:inline;" >
+
+{% csrf_token %}
+
+<button type="submit" style=" border:none; background:none; color:#dc2626; cursor:pointer; font-family:Tahoma, Arial, sans-serif; padding:0; " onclick=" return confirm('هل أنت متأكد من حذف المورد؟'); " > حذف </button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="8" style=" text-align:center; padding:40px; " > لا يوجد موردون حاليًا. </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}

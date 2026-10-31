@@ -1,0 +1,302 @@
+
+<div class="sale-page" dir="rtl">
+
+    <form
+        method="post"
+        action="{% if sale %}{% url 'sales:edit' sale.pk %}{% else %}{% url 'sales:create' %}{% endif %}"
+    >
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="sale-alert">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- بيانات الفاتورة -->
+        <div class="sale-panel">
+
+            <div class="sale-panel-header">
+                <div class="sale-icon">🧾</div>
+
+                <div>
+                    <h2>
+                        {% if sale %}
+                            تعديل فاتورة البيع
+                        {% else %}
+                            بيانات الفاتورة
+                        {% endif %}
+                    </h2>
+
+                    <p>أدخل المعلومات الأساسية لعملية البيع</p>
+                </div>
+            </div>
+
+            <div class="sale-fields">
+                {% for field in form %}
+                    <div class="sale-field">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="sale-required">*</span>
+                            {% endif %}
+                        </label>
+
+                        {{ field }}
+
+                        {% for error in field.errors %}
+                            <div class="sale-error">{{ error }}</div>
+                        {% endfor %}
+
+                        {% if field.help_text %}
+                            <small class="sale-help">{{ field.help_text }}</small>
+                        {% endif %}
+
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- تفاصيل المنتجات -->
+        <div class="sale-panel">
+
+            <div class="sale-panel-header">
+                <div class="sale-icon product-icon">📦</div>
+
+                <div>
+                    <h2>تفاصيل المنتجات</h2>
+                    <p>أضف منتجات متعددة إلى الفاتورة وحدد الكمية وسعر الوحدة</p>
+                </div>
+            </div>
+
+            {% if item_formset.non_form_errors %}
+                <div class="sale-alert">
+                    {% for error in item_formset.non_form_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {{ item_formset.management_form }}
+
+            <div style="overflow-x:auto;">
+                <table class="table align-middle" style="min-width:600px;">
+                    <thead>
+                        <tr>
+                            <th>المنتج</th>
+                            <th>الكمية</th>
+                            <th>سعر الوحدة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="sale-items-body">
+
+                        {% for item_form in item_formset %}
+                            <tr class="sale-item-row">
+
+                                {% for hidden in item_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                <td>
+                                    {% for field in item_form.visible_fields %}
+                                        {% if field.name == "product" %}
+                                            {{ field }}
+                                            {% for error in field.errors %}
+                                                <div class="sale-error">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% for field in item_form.visible_fields %}
+                                        {% if field.name == "quantity" %}
+                                            {{ field }}
+                                            {% for error in field.errors %}
+                                                <div class="sale-error">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% for field in item_form.visible_fields %}
+                                        {% if field.name == "unit_price" %}
+                                            {{ field }}
+                                            {% for error in field.errors %}
+                                                <div class="sale-error">{{ error }}</div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    {% if item_formset.can_delete %}
+                                        <div hidden>
+                                            {{ item_form.DELETE }}
+                                        </div>
+                                    {% endif %}
+
+                                    <button
+                                        type="button"
+                                        class="product-action product-delete remove-sale-item"
+                                    >
+                                        🗑 حذف
+                                    </button>
+                                </td>
+
+                            </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+
+            <button
+                type="button"
+                id="add-sale-item"
+                class="sale-submit"
+                style="margin-top:15px;"
+            >
+                ＋ إضافة منتج آخر
+            </button>
+
+            <!-- قالب صف جديد -->
+            <template id="empty-sale-item-template">
+                <tr class="sale-item-row">
+
+                    {% for hidden in item_formset.empty_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+
+                    <td>
+                        {% for field in item_formset.empty_form.visible_fields %}
+                            {% if field.name == "product" %}
+                                {{ field }}
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+
+                    <td>
+                        {% for field in item_formset.empty_form.visible_fields %}
+                            {% if field.name == "quantity" %}
+                                {{ field }}
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+
+                    <td>
+                        {% for field in item_formset.empty_form.visible_fields %}
+                            {% if field.name == "unit_price" %}
+                                {{ field }}
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+
+                    <td>
+                        {% if item_formset.can_delete %}
+                            <div hidden>
+                                {{ item_formset.empty_form.DELETE }}
+                            </div>
+                        {% endif %}
+
+                        <button
+                            type="button"
+                            class="product-action product-delete remove-sale-item"
+                        >
+                            🗑 حذف
+                        </button>
+                    </td>
+
+                </tr>
+            </template>
+
+        </div>
+
+        <!-- أزرار الحفظ -->
+        <div class="sale-submit-panel">
+
+            <div>
+                <strong>
+                    {% if sale %}
+                        هل تريد حفظ التعديلات؟
+                    {% else %}
+                        هل انتهيت من إدخال البيانات؟
+                    {% endif %}
+                </strong>
+
+                <p>تحقق من المعلومات قبل الحفظ.</p>
+            </div>
+
+            <button type="submit" class="sale-submit">
+                💾
+                {% if sale %}
+                    حفظ التعديلات
+                {% else %}
+                    حفظ الفاتورة
+                {% endif %}
+            </button>
+
+        </div>
+
+        <p class="sale-note">
+            <span class="sale-required">*</span>
+            الحقول الإلزامية
+        </p>
+
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tbody = document.getElementById("sale-items-body");
+    const addButton = document.getElementById("add-sale-item");
+    const template = document.getElementById("empty-sale-item-template");
+    const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+
+    if (!tbody || !addButton || !template || !totalForms) {
+        console.error(
+            "تعذر العثور على عناصر formset. تحقق من البادئة items."
+        );
+        return;
+    }
+
+    // إضافة صف منتج جديد
+    addButton.addEventListener("click", function () {
+        const index = Number(totalForms.value);
+
+        const newRow = template.innerHTML.replace(
+            /__prefix__/g,
+            index
+        );
+
+        tbody.insertAdjacentHTML("beforeend", newRow);
+        totalForms.value = index + 1;
+    });
+
+    // حذف صف منتج
+    tbody.addEventListener("click", function (event) {
+        const button = event.target.closest(".remove-sale-item");
+
+        if (!button) return;
+
+        const row = button.closest(".sale-item-row");
+        const deleteInput = row.querySelector(
+            'input[name$="-DELETE"]'
+        );
+
+        if (deleteInput) {
+            // وضع علامة الحذف للعناصر الموجودة مسبقًا
+            deleteInput.checked = true;
+            row.style.display = "none";
+        } else {
+            row.remove();
+        }
+    });
+});
+</script>

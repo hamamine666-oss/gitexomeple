@@ -1,0 +1,853 @@
+
+{% extends "base.html" %}
+
+{% block title %}فواتير المبيعات{% endblock %}
+
+{% block extra_head %}
+<style>
+    .sales-page {
+        direction: rtl;
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .sales-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 25px;
+    }
+
+    .sales-heading h1 {
+        font-size: 25px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+    }
+
+    .sales-heading p {
+        color: #64748b;
+        margin-bottom: 0;
+        font-size: 13px;
+    }
+
+    .sales-stat,
+    .sales-table-card {
+        background: #fff;
+        border: 1px solid #e8edf4;
+        border-radius: 13px;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .04);
+    }
+
+    .sales-stat {
+        padding: 20px;
+        margin-bottom: 22px;
+    }
+
+    .sales-stat-label {
+        color: #64748b;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .sales-stat-value {
+        color: #1e293b;
+        font-size: 27px;
+        font-weight: 800;
+    }
+
+    .sales-card-header {
+        padding: 20px;
+        border-bottom: 1px solid #edf0f5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .sales-card-header h5 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .sales-search {
+        padding: 20px;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    .sales-search .form-control {
+        min-height: 43px;
+        border-radius: 8px;
+    }
+
+    .sales-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .sales-table {
+        width: 100%;
+        min-width: 700px;
+        border-collapse: collapse;
+        margin: 0;
+        background: #fff;
+    }
+
+    .sales-table th,
+    .sales-table td {
+        padding: 15px 14px;
+        text-align: right;
+        vertical-align: middle;
+        border-bottom: 1px solid #edf0f5;
+        white-space: nowrap;
+    }
+
+    .sales-table th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .sales-table td {
+        color: #334155;
+        font-size: 13px;
+    }
+
+    .sales-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .invoice-link {
+        border: none;
+        background: transparent;
+        color: #2563eb;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .invoice-link:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .sales-status {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .sales-status-paid {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .sales-status-partial {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sales-status-pending {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .sales-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 16px 20px;
+        border-top: 1px solid #edf0f5;
+        color: #64748b;
+        font-size: 12px;
+    }
+
+    .sales-empty {
+        padding: 50px 20px !important;
+        text-align: center !important;
+        white-space: normal !important;
+    }
+
+    .sales-empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+    }
+
+    /* ترقيم الصفحات */
+    .sales-pagination {
+        padding: 20px;
+        border-top: 1px solid #edf0f5;
+        direction: rtl;
+    }
+
+    .sales-pagination .pagination {
+        gap: 5px;
+    }
+
+    .sales-pagination .page-link {
+        color: #2563eb;
+        border-radius: 8px;
+        min-width: 40px;
+        text-align: center;
+        font-weight: 700;
+        border: 1px solid #e2e8f0;
+        transition: all .2s ease;
+    }
+
+    .sales-pagination .page-link:hover {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    .sales-pagination .page-item.active .page-link {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    #saleModal .modal-content,
+    #saleDetailModal .modal-content {
+        border: none;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    #saleModal .modal-header,
+    #saleDetailModal .modal-header {
+        padding: 18px 22px;
+        background: #fff;
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    #saleModal .modal-body,
+    #saleDetailModal .modal-body {
+        padding: 22px;
+    }
+
+    #saleDetailModal .detail-box {
+        height: 100%;
+        padding: 15px;
+        border: 1px solid #e8edf4;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    #saleDetailModal .detail-label {
+        display: block;
+        color: #64748b;
+        font-size: 12px;
+        margin-bottom: 8px;
+    }
+
+    #saleDetailModal .detail-value {
+        color: #1e293b;
+        font-size: 14px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    #saleDetailModal .detail-products {
+        width: 100%;
+        min-width: 550px;
+        border-collapse: collapse;
+    }
+
+    #saleDetailModal .detail-products th,
+    #saleDetailModal .detail-products td {
+        padding: 12px;
+        border-bottom: 1px solid #edf0f5;
+        text-align: right;
+        font-size: 13px;
+    }
+
+    #saleDetailModal .detail-products th {
+        background: #f8fafc;
+        color: #64748b;
+    }
+
+    @media (max-width: 600px) {
+        .sales-heading h1 {
+            font-size: 21px;
+        }
+
+        .sales-heading .btn {
+            width: 100%;
+        }
+
+        .sales-card-header,
+        .sales-search {
+            padding: 15px;
+        }
+
+        .sales-pagination {
+            padding: 15px 8px;
+        }
+
+        .sales-pagination .page-link {
+            min-width: 34px;
+            padding: 7px 10px;
+        }
+
+        #saleModal .modal-body,
+        #saleDetailModal .modal-body {
+            padding: 14px;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container-fluid py-4" dir="rtl">
+<div class="sales-page">
+
+    <!-- عنوان الصفحة -->
+    <div class="sales-heading">
+        <div>
+            <h1>🧾 فواتير المبيعات</h1>
+            <p>إدارة ومتابعة الفواتير والعملاء والمنتجات المباعة</p>
+        </div>
+
+        <button type="button"
+                class="btn btn-primary px-4 py-2"
+                data-bs-toggle="modal"
+                data-bs-target="#saleModal">
+            <i class="bi bi-plus-circle"></i>
+            فاتورة جديدة
+        </button>
+    </div>
+
+    <!-- الرسائل -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"
+                        aria-label="إغلاق"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- إجمالي الفواتير -->
+    <div class="sales-stat">
+        <div class="sales-stat-label">إجمالي عدد الفواتير</div>
+        <div class="sales-stat-value">
+            {{ page_obj.paginator.count }}
+        </div>
+    </div>
+
+    <div class="sales-table-card">
+
+        <!-- رأس الجدول -->
+        <div class="sales-card-header">
+            <h5>قائمة الفواتير</h5>
+            <span class="text-muted small">
+                اضغط على رقم الفاتورة لعرض تفاصيلها ومنتجاتها
+            </span>
+        </div>
+
+        <!-- البحث -->
+        <div class="sales-search">
+            <form method="get"
+                  action="{% url 'sales:list' %}"
+                  class="row g-2">
+
+                <div class="col-md-5">
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="ابحث برقم الفاتورة..."
+                           value="{{ search|default:'' }}">
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-search"></i>
+                        بحث
+                    </button>
+
+                    <a href="{% url 'sales:list' %}"
+                       class="btn btn-outline-secondary">
+                        إعادة تعيين
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- جدول الفواتير -->
+        <div class="sales-table-wrap">
+            <table class="sales-table">
+
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>رقم الفاتورة</th>
+                        <th>اسم العميل</th>
+                        <th>تاريخ البيع</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for sale in sales %}
+                    <tr>
+                        <td>
+                            {{ page_obj.start_index|add:forloop.counter0 }}
+                        </td>
+
+                        <td>
+                            <button type="button"
+                                    class="invoice-link"
+                                    data-sale-detail="{% url 'sales:detail' sale.pk %}"
+                                    data-sale-number="{{ sale.invoice_number }}">
+                                {{ sale.invoice_number }}
+                            </button>
+                        </td>
+
+                        <td>
+                            {{ sale.customer|default:"بدون عميل" }}
+                        </td>
+
+                        <td>
+                            {{ sale.sale_date|date:"Y-m-d H:i" }}
+                        </td>
+
+                        <td>
+                            {% if sale.status == "paid" %}
+                                <span class="sales-status sales-status-paid">
+                                    مدفوعة
+                                </span>
+                            {% elif sale.status == "partial" %}
+                                <span class="sales-status sales-status-partial">
+                                    مدفوعة جزئيًا
+                                </span>
+                            {% else %}
+                                <span class="sales-status sales-status-pending">
+                                    معلقة
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+
+                                <a href="{% url 'sales:edit' sale.pk %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                    تعديل
+                                </a>
+
+                                <form method="post"
+                                      action="{% url 'sales:delete' sale.pk %}"
+                                      onsubmit="return confirm('هل أنت متأكد من حذف الفاتورة؟');">
+                                    {% csrf_token %}
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                        حذف
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="sales-empty">
+                            <div class="sales-empty-icon">📭</div>
+
+                            <h6 class="fw-bold">
+                                لا توجد فواتير مبيعات
+                            </h6>
+
+                            <p class="text-muted">
+                                {% if search %}
+                                    لم يتم العثور على فواتير تطابق البحث.
+                                {% else %}
+                                    لم يتم إنشاء أي فاتورة حتى الآن.
+                                {% endif %}
+                            </p>
+
+                            <button type="button"
+                                    class="btn btn-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#saleModal">
+                                إنشاء فاتورة جديدة
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- معلومات العرض -->
+        <div class="sales-footer">
+            <span>
+                {% if page_obj.paginator.count %}
+                    عرض {{ page_obj.start_index }} إلى
+                    {{ page_obj.end_index }}
+                    من {{ page_obj.paginator.count }} فاتورة
+                {% else %}
+                    لا توجد فواتير للعرض
+                {% endif %}
+            </span>
+
+            <span>نظام إدارة المبيعات</span>
+        </div>
+
+        <!-- ترقيم الصفحات -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="sales-pagination">
+            <nav aria-label="صفحات فواتير المبيعات">
+                <ul class="pagination justify-content-center flex-wrap mb-0">
+
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}{% if search %}&amp;search={{ search|urlencode }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                            السابق
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link"
+                           href="?page={{ num }}{% if search %}&amp;search={{ search|urlencode }}{% endif %}"
+                           {% if page_obj.number == num %}aria-current="page"{% endif %}>
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}{% if search %}&amp;search={{ search|urlencode }}{% endif %}">
+                            التالي
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </nav>
+
+            <div class="text-center text-muted small mt-3">
+                الصفحة {{ page_obj.number }}
+                من {{ page_obj.paginator.num_pages }}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+</div>
+
+
+<!-- نافذة إنشاء فاتورة -->
+<div class="modal fade" id="saleModal" tabindex="-1"
+     aria-labelledby="saleModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="saleModalLabel">
+                    🧾 إضافة فاتورة بيع جديدة
+                </h5>
+
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+
+            <div class="modal-body" id="saleModalBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-3">جاري تحميل نموذج الفاتورة...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- نافذة تفاصيل الفاتورة -->
+<div class="modal fade" id="saleDetailModal" tabindex="-1"
+     aria-labelledby="saleDetailModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="saleDetailModalLabel">
+                    تفاصيل الفاتورة
+                </h5>
+
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+
+            <div class="modal-body" id="saleDetailBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-3">جاري تحميل التفاصيل...</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    إغلاق
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // نافذة إنشاء الفاتورة
+    const saleModalElement = document.getElementById("saleModal");
+    const saleModalBody = document.getElementById("saleModalBody");
+    const saleModal = bootstrap.Modal.getOrCreateInstance(saleModalElement);
+
+    const createUrl = "{% url 'sales:create' %}";
+    const listUrl = "{% url 'sales:list' %}";
+
+    let saleFormLoaded = false;
+    let saleLoading = false;
+
+    saleModalElement.addEventListener("show.bs.modal", async function () {
+        if (saleFormLoaded || saleLoading) return;
+
+        saleLoading = true;
+
+        saleModalBody.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3">جاري تحميل نموذج الفاتورة...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(createUrl, {
+                headers: {"X-Requested-With": "XMLHttpRequest"}
+            });
+
+            if (!response.ok) {
+                throw new Error("تعذر تحميل نموذج الفاتورة.");
+            }
+
+            saleModalBody.innerHTML = await response.text();
+
+            if (typeof window.initSaleForm === "function") {
+                window.initSaleForm(saleModalBody);
+            }
+
+            saleFormLoaded = true;
+
+        } catch (error) {
+            saleModalBody.innerHTML = `
+                <div class="alert alert-danger">
+                    ${error.message}
+                </div>
+            `;
+        } finally {
+            saleLoading = false;
+        }
+    });
+
+
+    // إضافة وحذف المنتجات
+    window.initSaleForm = function (container) {
+        const tbody = container.querySelector("#sale-items-body");
+        const addButton = container.querySelector("#add-sale-item");
+        const template = container.querySelector("#empty-sale-item-template");
+        const totalForms = container.querySelector('[name="items-TOTAL_FORMS"]');
+
+        if (!tbody || !addButton || !template || !totalForms) {
+            console.error("تعذر العثور على عناصر المنتجات أو management form.");
+            return;
+        }
+
+        if (addButton.dataset.initialized === "true") return;
+        addButton.dataset.initialized = "true";
+
+        addButton.addEventListener("click", function () {
+            const index = parseInt(totalForms.value, 10);
+            const html = template.innerHTML.replace(/__prefix__/g, index);
+
+            tbody.insertAdjacentHTML("beforeend", html);
+            totalForms.value = index + 1;
+        });
+
+        tbody.addEventListener("click", function (event) {
+            const button = event.target.closest(".remove-sale-item");
+            if (!button) return;
+
+            const row = button.closest(".sale-item-row");
+            if (!row) return;
+
+            const deleteInput = row.querySelector('input[name$="-DELETE"]');
+
+            if (deleteInput) {
+                deleteInput.checked = true;
+                row.style.display = "none";
+            } else {
+                row.remove();
+            }
+        });
+    };
+
+
+    // حفظ الفاتورة عبر AJAX
+    saleModalBody.addEventListener("submit", async function (event) {
+        const form = event.target.closest("form");
+        if (!form) return;
+
+        event.preventDefault();
+
+        const submitButton = form.querySelector(
+            'button[type="submit"], input[type="submit"]'
+        );
+
+        const originalText = submitButton
+            ? submitButton.innerHTML
+            : "";
+
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = "جاري الحفظ...";
+        }
+
+        try {
+            const response = await fetch(form.action || createUrl, {
+                method: "POST",
+                body: new FormData(form),
+                headers: {"X-Requested-With": "XMLHttpRequest"}
+            });
+
+            const contentType = response.headers.get("content-type") || "";
+
+            if (contentType.includes("application/json")) {
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "تعذر حفظ الفاتورة.");
+                }
+
+                saleModal.hide();
+                window.location.href = listUrl;
+                return;
+            }
+
+            // إعادة عرض النموذج عند وجود أخطاء تحقق
+            saleModalBody.innerHTML = await response.text();
+
+            if (typeof window.initSaleForm === "function") {
+                window.initSaleForm(saleModalBody);
+            }
+
+            const errorBox = document.createElement("div");
+            errorBox.className = "alert alert-warning";
+            errorBox.textContent =
+                "يرجى مراجعة الحقول والأخطاء الموضحة في النموذج.";
+
+            saleModalBody.prepend(errorBox);
+
+        } catch (error) {
+            let errorBox = saleModalBody.querySelector(".save-error");
+
+            if (!errorBox) {
+                errorBox = document.createElement("div");
+                errorBox.className = "alert alert-danger save-error";
+                saleModalBody.prepend(errorBox);
+            }
+
+            errorBox.textContent = error.message;
+
+        } finally {
+            if (submitButton && document.contains(submitButton)) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        }
+    });
+
+
+    // نافذة تفاصيل الفاتورة
+    const detailModalElement = document.getElementById("saleDetailModal");
+    const detailModal = bootstrap.Modal.getOrCreateInstance(detailModalElement);
+
+    const detailBody = document.getElementById("saleDetailBody");
+    const detailTitle = document.getElementById("saleDetailModalLabel");
+
+    document.addEventListener("click", async function (event) {
+        const button = event.target.closest("[data-sale-detail]");
+        if (!button) return;
+
+        const url = button.dataset.saleDetail;
+        const invoiceNumber = button.dataset.saleNumber;
+
+        detailTitle.textContent = "تفاصيل الفاتورة رقم " + invoiceNumber;
+
+        detailBody.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3">جاري تحميل تفاصيل الفاتورة...</p>
+            </div>
+        `;
+
+        detailModal.show();
+
+        try {
+            const response = await fetch(url, {
+                headers: {"X-Requested-With": "XMLHttpRequest"}
+            });
+
+            if (!response.ok) {
+                throw new Error("تعذر تحميل تفاصيل الفاتورة.");
+            }
+
+            detailBody.innerHTML = await response.text();
+
+        } catch (error) {
+            detailBody.innerHTML = "";
+
+            const errorBox = document.createElement("div");
+            errorBox.className = "alert alert-danger mb-0";
+            errorBox.textContent =
+                error.message + " تحقق من اتصال الخادم والصلاحيات.";
+
+            detailBody.appendChild(errorBox);
+        }
+    });
+
+});
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+
+<div dir="rtl">
+
+    <div class="mb-4">
+        <h5 class="fw-bold mb-2">
+            {% if inventory %}
+                ✏️ تعديل المخزون
+            {% else %}
+                ➕ إضافة مخزون جديد
+            {% endif %}
+        </h5>
+
+        <p class="text-muted mb-0">
+            {% if inventory %}
+                تعديل بيانات المخزون
+            {% else %}
+                إضافة كمية مخزون لمنتج
+            {% endif %}
+        </p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post"
+          action="{% if inventory %}{% url 'inventory:edit' inventory.pk %}{% else %}{% url 'inventory:create' %}{% endif %}"
+          id="inventoryCreateForm">
+
+        {% csrf_token %}
+
+        <div class="row g-3">
+
+            <!-- المنتج -->
+            <div class="col-12">
+                <label for="product" class="form-label fw-bold">
+                    المنتج <span class="text-danger">*</span>
+                </label>
+
+                <select name="product" id="product"
+                        class="form-select" required>
+                    <option value="">اختر المنتج</option>
+
+                    {% for product in products %}
+                        <option value="{{ product.id }}"
+                            {% if inventory and inventory.product_id == product.id %}selected{% endif %}>
+                            {{ product.code }} - {{ product.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- الكمية -->
+            <div class="col-md-6">
+                <label for="quantity" class="form-label fw-bold">
+                    الكمية الحالية
+                </label>
+
+                <input type="number"
+                       name="quantity"
+                       id="quantity"
+                       min="0"
+                       step="1"
+                       value="{{ inventory.quantity|default:'0' }}"
+                       class="form-control"
+                       required>
+            </div>
+
+            <!-- الحد الأدنى -->
+            <div class="col-md-6">
+                <label for="minimum_stock" class="form-label fw-bold">
+                    الحد الأدنى للمخزون
+                </label>
+
+                <input type="number"
+                       name="minimum_stock"
+                       id="minimum_stock"
+                       min="0"
+                       step="1"
+                       value="{{ inventory.minimum_stock|default:'5' }}"
+                       class="form-control"
+                       required>
+            </div>
+
+            <!-- الموقع -->
+            <div class="col-12">
+                <label for="location" class="form-label fw-bold">
+                    موقع التخزين
+                </label>
+
+                <input type="text"
+                       name="location"
+                       id="location"
+                       value="{{ inventory.location|default:'' }}"
+                       class="form-control"
+                       placeholder="مثال: المستودع الرئيسي">
+            </div>
+
+            <!-- الملاحظات -->
+            <div class="col-12">
+                <label for="notes" class="form-label fw-bold">
+                    ملاحظات
+                </label>
+
+                <textarea name="notes"
+                          id="notes"
+                          rows="3"
+                          class="form-control"
+                          style="resize: vertical;"
+                          placeholder="أضف ملاحظات إضافية...">{{ inventory.notes|default:'' }}</textarea>
+            </div>
+
+        </div>
+
+        <!-- الأزرار -->
+        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+
+            <button type="button"
+                    class="btn btn-outline-secondary"
+                    data-bs-dismiss="modal">
+                إلغاء
+            </button>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save"></i>
+                {% if inventory %}حفظ التعديلات{% else %}حفظ المخزون{% endif %}
+            </button>
+
+        </div>
+
+    </form>
+
+</div>

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if purchase %}
+تعديل فاتورة شراء
+{% else %}
+إضافة فاتورة شراء
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+        <h1>
+
+            {% if purchase %}
+                ✏️ تعديل فاتورة شراء
+            {% else %}
+                ➕ إضافة فاتورة شراء
+            {% endif %}
+
+        </h1>
+
+        <p style="color:#64748b; margin-top:8px;">
+            {% if purchase %}
+                تعديل بيانات فاتورة الشراء
+            {% else %}
+                إضافة فاتورة شراء جديدة
+            {% endif %}
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'purchases:list' %}"
+        class="btn"
+    >
+        العودة إلى المشتريات
+    </a>
+
+</div>
+
+
+<div class="card">
+
+<form method="post">
+
+    {% csrf_token %}
+
+
+    <div
+        style="
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:20px;
+        "
+    >
+
+        <div>
+
+            <label>
+                رقم الفاتورة
+            </label>
+
+            <input
+                type="text"
+                name="invoice_number"
+                value="{{ purchase.invoice_number|default:'' }}"
+                required
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                "
+            >
+
+        </div>
+
+
+        <div>
+
+            <label>
+                المورد
+            </label>
+
+            <select
+                name="supplier"
+                required
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                    background:white;
+                "
+            >
+
+                <option value="">
+                    اختر المورد
+                </option>
+
+                {% for supplier in suppliers %}
+
+                    <option
+                        value="{{ supplier.id }}"
+                        {% if purchase.supplier_id == supplier.id %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ supplier.name }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div>
+
+            <label>
+                الإجمالي
+            </label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="total_amount"
+                value="{{ purchase.total_amount|default:'0' }}"
+                required
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                "
+            >
+
+        </div>
+
+
+        <div>
+
+            <label>
+                المبلغ المدفوع
+            </label>
+
+            <input
+                type="number"
+                step="0.01"
+                name="paid_amount"
+                value="{{ purchase.paid_amount|default:'0' }}"
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                "
+            >
+
+        </div>
+
+
+        <div>
+
+            <label>
+                الحالة
+            </label>
+
+            <select
+                name="status"
+                style="
+                    width:100%;
+                    padding:12px;
+                    margin-top:7px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                    background:white;
+                "
+            >
+
+                <option
+                    value="pending"
+                    {% if purchase.status == "pending" or not purchase %}
+                        selected
+                    {% endif %}
+                >
+                    معلقة
+                </option>
+
+                <option
+                    value="partial"
+                    {% if purchase.status == "partial" %}
+                        selected
+                    {% endif %}
+                >
+                    مدفوعة جزئياً
+                </option>
+
+                <option
+                    value="paid"
+                    {% if purchase.status == "paid" %}
+                        selected
+                    {% endif %}
+                >
+                    مدفوعة
+                </option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div style="margin-top:20px;">
+
+        <label>
+            ملاحظات
+        </label>
+
+        <textarea
+            name="notes"
+            rows="5"
+            style="
+                width:100%;
+                padding:12px;
+                margin-top:7px;
+                border:1px solid #ddd;
+                border-radius:7px;
+                font-family:Tahoma, Arial, sans-serif;
+            "
+        >{{ purchase.notes|default:'' }}</textarea>
+
+    </div>
+
+
+    <div
+        style="
+            margin-top:25px;
+            display:flex;
+            gap:10px;
+        "
+    >
+
+        <button
+            type="submit"
+            class="btn"
+        >
+            💾 حفظ الفاتورة
+        </button>
+
+        <a
+            href="{% url 'purchases:list' %}"
+            class="btn"
+            style="background:#64748b;"
+        >
+            إلغاء
+        </a>
+
+    </div>
+
+</form>
+
+</div>
+
+{% endblock %}

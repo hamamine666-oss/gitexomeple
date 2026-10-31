@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}المشتريات{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>🧾 المشتريات</h1>
+
+        <p style="color:#64748b; margin-top:8px;">
+            إدارة فواتير المشتريات والموردين والمدفوعات
+        </p>
+    </div>
+
+    <a href="{% url 'purchases:create' %}" class="btn">
+        + إضافة فاتورة شراء
+    </a>
+
+</div>
+
+
+<div class="card" style="margin-bottom:20px;">
+
+    <form method="get">
+
+        <div style="display:flex; gap:10px;">
+
+            <input
+                type="text"
+                name="search"
+                value="{{ search }}"
+                placeholder="ابحث برقم الفاتورة أو اسم المورد..."
+                style="
+                    flex:1;
+                    padding:12px;
+                    border:1px solid #ddd;
+                    border-radius:7px;
+                    font-family:Tahoma, Arial, sans-serif;
+                "
+            >
+
+            <button type="submit" class="btn">
+                🔍 بحث
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<div class="card">
+
+<table>
+
+<thead>
+
+<tr>
+    <th>رقم الفاتورة</th>
+    <th>المورد</th>
+    <th>التاريخ</th>
+    <th>الإجمالي</th>
+    <th>المدفوع</th>
+    <th>الباقي</th>
+    <th>الحالة</th>
+    <th>الإجراءات</th>
+</tr>
+
+</thead>
+
+
+<tbody>
+
+{% for purchase in purchases %}
+
+<tr>
+
+    <td>
+        <strong>{{ purchase.invoice_number }}</strong>
+    </td>
+
+    <td>
+        {{ purchase.supplier.name }}
+    </td>
+
+    <td>
+        {{ purchase.purchase_date|date:"Y-m-d H:i" }}
+    </td>
+
+    <td>
+        {{ purchase.total_amount }} دج
+    </td>
+
+    <td>
+        {{ purchase.paid_amount }} دج
+    </td>
+
+    <td>
+        {{ purchase.total_amount|add:"-"|add:purchase.paid_amount }} دج
+    </td>
+
+    <td>
+
+        {% if purchase.status == "paid" %}
+
+            <span class="badge success">
+                مدفوعة
+            </span>
+
+        {% elif purchase.status == "partial" %}
+
+            <span class="badge warning">
+                مدفوعة جزئياً
+            </span>
+
+        {% else %}
+
+            <span class="badge danger">
+                معلقة
+            </span>
+
+        {% endif %}
+
+    </td>
+
+    <td>
+
+        <a
+            href="{% url 'purchases:edit' purchase.pk %}"
+            style="color:#2563eb; text-decoration:none;"
+        >
+            تعديل
+        </a>
+
+        <span> | </span>
+
+        <form
+            method="post"
+            action="{% url 'purchases:delete' purchase.pk %}"
+            style="display:inline;"
+        >
+
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                style="
+                    border:none;
+                    background:none;
+                    color:#dc2626;
+                    cursor:pointer;
+                    font-family:Tahoma, Arial, sans-serif;
+                    padding:0;
+                "
+                onclick="return confirm('هل أنت متأكد من حذف الفاتورة؟');"
+            >
+                حذف
+            </button>
+
+        </form>
+
+    </td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+    <td
+        colspan="8"
+        style="text-align:center; padding:40px;"
+    >
+        لا توجد فواتير مشتريات حالياً.
+    </td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
